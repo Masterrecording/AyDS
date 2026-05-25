@@ -131,7 +131,9 @@ rec_question.pack(pady=10, padx=40)
 rec_answer = Entry(main_frame, placeholder_text="Respuesta")
 rec_answer.pack(pady=10, padx=40)
 
-# 
+# Ingresar la boleta del estudiante
+boleta = Entry(main_frame, placeholder_text="Boleta")
+boleta.pack(pady=10, padx=40)
 
 register_button = Button(main_frame, text="Registrarse", command=register)
 register_button.pack(pady=20)
