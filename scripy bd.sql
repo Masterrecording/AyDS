@@ -1,6 +1,5 @@
 -- MySQL Script - Schema AyDS
 -- Versión corregida 1.1
--- drop database AyDS
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -8,6 +7,12 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 
 CREATE SCHEMA IF NOT EXISTS `AyDS` DEFAULT CHARACTER SET utf8;
 USE `AyDS`;
+
+-- NO LO DESCOMENTEN
+-- Y MUCHO MENOS LO EJECUTEN
+-- !!!!!!!!!!!!!!!!!!!!!!
+-- !!!!! POR FAVOR !!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!
 -- drop database AyDS;
 
 -- -----------------------------------------------------
