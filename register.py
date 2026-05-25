@@ -43,8 +43,14 @@ def register():
     contrasena = pass_entry.get().strip()
     contrasena2 = pass2_entry.get().strip()
     pregunta_recuperacion = rec_question.get().strip()
-    id_recuperacion = recibir_preguntas().index(pregunta_recuperacion)
     respuesta = rec_answer.get().strip()
+    
+    if pregunta_recuperacion == "Recuperacion": return resultado_label.configure(text="Pregunta de recuperación inválida",
+                                                                                 text_color="orange")
+    else: id_recuperacion = recibir_preguntas().index(pregunta_recuperacion)
+    
+    if not respuesta: return resultado_label.configure(text="Respuesta de recupración inválida",
+                                                       text_color="orange")
     
     if contrasena != contrasena2:
         resultado_label.configure(text="Las contraseñas no coinciden", text_color="orange")
@@ -100,7 +106,7 @@ def register():
 # ================= UI =================
 
 root = Tk()
-root.geometry("400x420")
+root.geometry("400x710")
 root.title("Login / Register")
 
 main_frame = Frame(root)
@@ -125,6 +131,7 @@ pass2_entry.pack(pady=10, padx=40)
 
 # Seleccionar pregunta de recuperación con ComboBox
 rec_question = ComboBox(main_frame, values=recibir_preguntas())
+rec_question.set("Recuperacion")
 rec_question.pack(pady=10, padx=40)
 
 # Ingresar respuesta (40 chars max) de recuperacion
