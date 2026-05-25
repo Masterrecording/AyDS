@@ -50,7 +50,7 @@ class LoginWindow(Tk):
 
 
 
-    def conectar_db():
+    def conectar_db(self):
         DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
         
         return sql.connect(
