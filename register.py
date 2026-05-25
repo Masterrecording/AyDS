@@ -44,6 +44,9 @@ def register():
     contrasena2 = pass2_entry.get().strip()
     pregunta_recuperacion = rec_question.get().strip()
     respuesta = rec_answer.get().strip()
+    id_boleta = boleta.get().strip()
+    
+    if not id_boleta: return resultado_label.configure("Ingresa una boleta válida", text_color="orange")
     
     if pregunta_recuperacion == "Recuperacion": return resultado_label.configure(text="Pregunta de recuperación inválida",
                                                                                  text_color="orange")
@@ -81,8 +84,8 @@ def register():
             return
 
         # Insertar usuario 
-        query = "INSERT INTO usuarios (usuario, contrasena_hash) VALUES (%s, %s)"
-        cursor.execute(query, (usuario, contrasena_hash))
+        query = "INSERT INTO usuarios (nombre, boleta, contraseña, res_recu, id_recuperacion, idroles) VALUES ( ?, ?, ?, ?, ?, ?)"
+        cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta, id_recuperacion, 1))
         conexion.commit()
 
         resultado_label.configure(text="Usuario registrado", text_color="green")
