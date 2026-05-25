@@ -121,7 +121,7 @@ pass_entry.pack(pady=10, padx=40)
 
 # Confirmar contraseña
 pass2_entry = Entry(main_frame, placeholder_text="Conf Contraseña", show="*")
-pass_entry.pack(pady=10, padx=40)
+pass2_entry.pack(pady=10, padx=40)
 
 # Seleccionar pregunta de recuperación con ComboBox
 rec_question = ComboBox(main_frame, values=recibir_preguntas())
@@ -131,7 +131,7 @@ rec_question.pack(pady=10, padx=40)
 rec_answer = Entry(main_frame, placeholder_text="Respuesta")
 rec_answer.pack(pady=10, padx=40)
 
-#
+# 
 
 register_button = Button(main_frame, text="Registrarse", command=register)
 register_button.pack(pady=20)
