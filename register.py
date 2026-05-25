@@ -1,6 +1,7 @@
 import hashlib
 import mysql.connector
 import pymysql as sql
+import json
 
 from customtkinter import CTk as Tk
 from customtkinter import CTkFrame as Frame
@@ -17,12 +18,14 @@ def abrir_login():
     app = login.LoginWindow()
     app.mainloop()
 
+DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
+
 def conectar_db():
     return sql.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="ayds"
+        host=DATABASE["host"],
+        user=DATABASE["user"],
+        password=DATABASE["password"],
+        database=DATABASE["database"]
     )
 
 

@@ -1,5 +1,6 @@
-import mysql.connector
+import pymysql as sql
 import tkinter as tk
+import json
 
 from customtkinter import CTk as Tk
 from customtkinter import CTkFrame as Frame
@@ -12,11 +13,13 @@ from customtkinter import CTkScrollableFrame as ScrollableFrame
 
 
 def conectar_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="monitoreo_estudiantil"
+    DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
+    
+    return sql.connect(
+        host=DATABASE["host"],
+        user=DATABASE["user"],
+        password=DATABASE["password"],
+        database=DATABASE["database"]
     )
 
 

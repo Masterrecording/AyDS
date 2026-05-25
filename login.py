@@ -1,5 +1,6 @@
+import pymysql as sql
 import hashlib
-import mysql.connector
+import json
 
 from customtkinter import CTk as Tk
 from customtkinter import CTkFrame as Frame
@@ -47,13 +48,17 @@ class LoginWindow(Tk):
         main_menu.pack(expand=True, fill="both")
         menu_window.mainloop()
 
-    def conectar_db(self):
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="monitoreo_estudiantil"
-    )
+
+
+    def conectar_db():
+        DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
+        
+        return sql.connect(
+            host=DATABASE["host"],
+            user=DATABASE["user"],
+            password=DATABASE["password"],
+            database=DATABASE["database"]
+        )
 
     def login(self):
         usuario = self.user_entry.get().strip()
