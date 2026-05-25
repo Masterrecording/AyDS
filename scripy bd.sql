@@ -1,5 +1,6 @@
 -- MySQL Script - Schema AyDS
 -- Versión corregida 1.1
+-- drop database AyDS
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -7,6 +8,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 
 CREATE SCHEMA IF NOT EXISTS `AyDS` DEFAULT CHARACTER SET utf8;
 USE `AyDS`;
+-- drop database AyDS;
 
 -- -----------------------------------------------------
 -- roles
@@ -18,6 +20,9 @@ CREATE TABLE IF NOT EXISTS `AyDS`.`roles` (
   UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC)
 ) ENGINE = InnoDB;
 
+INSERT INTO roles (nombre) VALUES
+('Alumno'),('Administrador');
+
 
 -- -----------------------------------------------------
 -- Table `AyDS`.`preguntas_recuperacion`
@@ -28,8 +33,12 @@ CREATE TABLE IF NOT EXISTS `AyDS`.`preguntas_recuperacion` (
   PRIMARY KEY (`idrecuperacion`)
 ) ENGINE = InnoDB;
 
-INSERT INTO preguntas_recuperacion (pregunta) VALUES 
-('En dónde naciste?'),('Nombre de tu personaje favorito?'),('Nombre de tu primera mascota?'),('Nombre de tu mejor amigo?'),('Comida favorita?');
+INSERT INTO `preguntas_recuperacion` (`pregunta`) VALUES 
+('En dónde naciste?'),
+('Nombre de tu personaje favorito?'),
+('Nombre de tu primera mascota?'),
+('Nombre de tu mejor amigo?'),
+('Comida favorita?');
 
 -- -----------------------------------------------------
 -- usuario
@@ -56,6 +65,9 @@ CREATE TABLE IF NOT EXISTS `AyDS`.`usuario` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
+
+INSERT INTO `AyDS`.`usuario` (`nombre`, `boleta`, `contraseña`, `res_recu`, `idrecuperacion`, `roles_idroles`)
+VALUES ('admin', 0, '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin', 1, 2);
 
 -- -----------------------------------------------------
 -- carreras
