@@ -53,7 +53,7 @@ def register():
     
     if pregunta_recuperacion == "Recuperacion": return resultado_label.configure(text="Pregunta de recuperación inválida",
                                                                                  text_color="orange")
-    else: id_recuperacion = recibir_preguntas().index(pregunta_recuperacion)
+    else: id_recuperacion = recibir_preguntas().index(pregunta_recuperacion)+1
     
     if not respuesta: return resultado_label.configure(text="Respuesta de recupración inválida",
                                                        text_color="orange")
@@ -81,14 +81,15 @@ def register():
         cursor = conexion.cursor()
 
         # Verificar si el usuario ya existe
-        cursor.execute("SELECT id_usuario FROM usuarios WHERE usuario = %s", (usuario,))
+        cursor.execute("SELECT idusuario FROM usuario WHERE nombre = %s", (usuario,))
         if cursor.fetchone():
             resultado_label.configure(text="El usuario ya existe", text_color="red")
             return
+        print(id_recuperacion)
 
         # Insertar usuario 
-        query = "INSERT INTO usuarios (nombre, boleta, contraseña, res_recu, id_recuperacion, idroles) VALUES ( ?, ?, ?, ?, ?, ?)"
-        cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta, id_recuperacion, 1))
+        query = "INSERT INTO usuario (nombre, boleta, contraseña, res_recu, idrecuperacion, roles_idroles) VALUES ( %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta, id_recuperacion, "1"))
         conexion.commit()
 
         resultado_label.configure(text="Usuario registrado", text_color="green")

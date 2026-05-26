@@ -28,7 +28,7 @@ class LoginWindow(Tk):
         self.user_entry = Entry(self.main_frame, placeholder_text="Usuario")
         self.user_entry.pack(pady=10, padx=40)
 
-        self.pass_entry = Entry(self.main_frame, placeholder_text="Contrasenia", show="*")
+        self.pass_entry = Entry(self.main_frame, placeholder_text="Contraseña", show="*")
         self.pass_entry.pack(pady=10, padx=40)
         self.pass_entry.bind("<Return>", lambda event: self.login())  # Permite presionar Enter para iniciar sesión
 
@@ -71,7 +71,7 @@ class LoginWindow(Tk):
             conexion = self.conectar_db()
             cursor = conexion.cursor()
 
-            query = "SELECT contrasena_hash FROM usuarios WHERE usuario = %s"
+            query = "SELECT contraseña FROM usuario WHERE nombre = %s"
             cursor.execute(query, (usuario,))
             resultado = cursor.fetchone()
 
