@@ -33,8 +33,11 @@ class LoginWindow(Tk):
         self.pass_entry.pack(pady=10, padx=40)
         self.pass_entry.bind("<Return>", lambda event: self.login())  # Permite presionar Enter para iniciar sesión
 
-        self.register_button = Button(self.main_frame, text="Registrarse", command=self.abrir_register)
-        self.register_button.pack(pady=20)
+        self.register_button = Button(self.main_frame, text="Registrarse", command=self.abrir_register, fg_color="gray", hover_color="darkgray")
+        self.register_button.pack(pady=5)
+
+        self.forgotten_pass = Button(self.main_frame, text="Olvide mi contraseña", command=self.abrir_olvide_mi_contraseña, fg_color="gray", hover_color="darkgray")
+        self.forgotten_pass.pack(pady=5)
 
         self.login_button = Button(self.main_frame, text="Entrar", command=self.login)
         self.login_button.pack(pady=20)
@@ -42,6 +45,11 @@ class LoginWindow(Tk):
         self.resultado_label = Label(self.main_frame, text="")
         self.resultado_label.pack()
         self.mainloop()
+        
+    def abrir_olvide_mi_contraseña(self):
+        self.destroy() 
+        from App.recover_password import RecoverPasswordWindow
+        RecoverPasswordWindow().show()
 
     def abrir_register(self):
         self.withdraw()
@@ -50,14 +58,13 @@ class LoginWindow(Tk):
 
     def abrir_menu(self, usuario):
         self.destroy()
-        from App.mainmenu import MainMenu
+        from App.mainmenu import GestorVentanas
 
-        menu_window = Tk()
-        menu_window.geometry("700x600")
-        main_menu = MainMenu(menu_window, usuario=usuario)
-        main_menu.pack(expand=True, fill="both")
-        menu_window.mainloop()
-
+        app = Tk()
+        app.geometry('800x650')
+        app.title('AyDS - Encuestas (refactor)')
+        gestor = GestorVentanas(app, usuario=usuario)
+        app.mainloop()
 
 
     def conectar_db(self):
@@ -71,7 +78,7 @@ class LoginWindow(Tk):
         )
 
     def login(self):
-        usuario = self.user_entry.get().strip()
+        usuario = self.user_entry.get().strip().lower()
         contrasena = self.pass_entry.get()
 
         

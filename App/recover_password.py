@@ -5,7 +5,7 @@ from tkinter.messagebox import showinfo, showerror
 
 DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
 
-class RecoverPasswordApp(ctk.CTk):
+class RecoverPasswordWindow(ctk.CTk):
     def __init__(self,):
         super().__init__()
         self.BG = "#1c1c1c"
@@ -41,7 +41,7 @@ class RecoverPasswordApp(ctk.CTk):
         return preguntas
 
     def actualizar_contraseña(self, usuario):
-        from updatepass import UpdatePassWindow
+        from App.updatepass import UpdatePassWindow
         self.destroy()
         UpdatePassWindow(usuario).show()
 
@@ -93,4 +93,4 @@ class RecoverPasswordApp(ctk.CTk):
 
 
 if __name__ == "__main__":
-    RecoverPasswordApp().show()
+    RecoverPasswordWindow().show()

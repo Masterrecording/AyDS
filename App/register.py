@@ -45,7 +45,7 @@ class RegisterWindow(Tk):
         return preguntas
 
     def register(self):
-        usuario = self.user_entry.get().strip()
+        usuario = self.user_entry.get().strip().lower()
         contrasena = self.pass_entry.get().strip()
         contrasena2 = self.pass2_entry.get().strip()
         pregunta_recuperacion = self.rec_question.get().strip()

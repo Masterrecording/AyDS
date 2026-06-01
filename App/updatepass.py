@@ -1,4 +1,7 @@
 import customtkinter as ctk
+import pymysql as sql
+import hashlib
+import json
 
 # Configuración de apariencia
 # ctk.set_appearance_mode("dark")
@@ -21,9 +24,33 @@ class UpdatePassWindow(ctk.CTk):
         if len(password1) < 4: return self.label_error.configure(text="PoLa contraseña debe tener al menos 4 caracteres.", text_color="orange")
         if password1 != password2: self.label_error.configure(text="Las contraseñas no coinciden.", text_color="orange")
 
+        password = hashlib.sha256(password1.encode()).hexdigest()
+
+        conn = self.conectar_db()
+        cur = conn.cursor()
         
+        cur.execute("UPDATE usuario SET contraseña = %s WHERE nombre = %s", args=(password, self.usuario))
+        conn.commit()
+        conn.close()
         
         self.label_error.configure(text="Contraseña actualizada correctamente", text_color="green")
+
+        self.abrir_login()
+        
+    def abrir_login(self):
+        self.destroy()
+        from App.login import LoginWindow
+        LoginWindow().show()
+
+    def conectar_db(self):
+        DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
+        
+        return sql.connect(
+            host=DATABASE["host"],
+            user=DATABASE["user"],
+            password=DATABASE["password"],
+            database=DATABASE["database"]
+        )
 
     def show(self):
         self.frame = ctk.CTkFrame(self.app, corner_radius=16)
