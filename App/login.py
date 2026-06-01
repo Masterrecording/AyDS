@@ -15,6 +15,7 @@ class LoginWindow(Tk):
         self.geometry("400x400")
         self.title("Login")
 
+    def show(self):
         self.main_frame = Frame(self)
         self.main_frame.pack(expand=True)
 
@@ -32,15 +33,24 @@ class LoginWindow(Tk):
         self.pass_entry.pack(pady=10, padx=40)
         self.pass_entry.bind("<Return>", lambda event: self.login())  # Permite presionar Enter para iniciar sesión
 
+        self.register_button = Button(self.main_frame, text="Registrarse", command=self.abrir_register)
+        self.register_button.pack(pady=20)
+
         self.login_button = Button(self.main_frame, text="Entrar", command=self.login)
         self.login_button.pack(pady=20)
 
         self.resultado_label = Label(self.main_frame, text="")
         self.resultado_label.pack()
+        self.mainloop()
+
+    def abrir_register(self):
+        self.withdraw()
+        from App.register import RegisterWindow
+        RegisterWindow().show()
 
     def abrir_menu(self, usuario):
         self.destroy()
-        from mainmenu import MainMenu
+        from App.mainmenu import MainMenu
 
         menu_window = Tk()
         menu_window.geometry("700x600")
