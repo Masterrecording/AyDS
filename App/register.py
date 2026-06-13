@@ -50,9 +50,10 @@ class RegisterWindow(Tk):
         contrasena2 = self.pass2_entry.get().strip()
         pregunta_recuperacion = self.rec_question.get().strip()
         respuesta = self.rec_answer.get().strip().lower()
+        respuesta_hash = hashlib.sha256(respuesta.encode()).hexdigest()
         id_boleta = self.boleta.get().strip()
         
-        if not id_boleta: return self.resultado_label.configure("Ingresa una boleta válida", text_color="orange")
+        if not id_boleta: return self.resultado_label.configure(text = "Ingresa una boleta válida", text_color="orange")
         
         if pregunta_recuperacion == "Recuperacion": return self.resultado_label.configure(text="Pregunta de recuperación inválida",
                                                                                     text_color="orange")
@@ -84,15 +85,15 @@ class RegisterWindow(Tk):
             cursor = conexion.cursor()
 
             # Verificar si el usuario ya existe
-            cursor.execute("SELECT idusuario FROM usuario WHERE nombre = %s", (usuario,))
+            cursor.execute("SELECT idusuario FROM usuario WHERE boleta = %s", (id_boleta,))
             if cursor.fetchone():
-                self.resultado_label.configure(text="El usuario ya existe", text_color="red")
+                self.resultado_label.configure(text="La boleta ya existe", text_color="red")
                 return
             print(id_recuperacion)
 
             # Insertar usuario 
-            query = "INSERT INTO usuario (nombre, boleta, contraseña, res_recu, idrecuperacion, roles_idroles) VALUES ( %s, %s, %s, %s, %s, %s)"
-            cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta, id_recuperacion, "1"))
+            query = "INSERT INTO usuario (nombre, boleta, contraseña, res_recu, preguntas_recuperacion_idrecuperacion, roles_idroles) VALUES ( %s, %s, %s, %s, %s, %s)"
+            cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta_hash, id_recuperacion, "1"))
             conexion.commit()
 
             self.resultado_label.configure(text="Usuario registrado", text_color="green")

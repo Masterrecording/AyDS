@@ -26,7 +26,7 @@ class LoginWindow(Tk):
         )
         self.login_label.pack(pady=(20, 30))
 
-        self.user_entry = Entry(self.main_frame, placeholder_text="Usuario")
+        self.user_entry = Entry(self.main_frame, placeholder_text="Boleta")
         self.user_entry.pack(pady=10, padx=40)
 
         self.pass_entry = Entry(self.main_frame, placeholder_text="Contraseña", show="*")
@@ -78,7 +78,7 @@ class LoginWindow(Tk):
         )
 
     def login(self):
-        usuario = self.user_entry.get().strip().lower()
+        boleta = self.user_entry.get().strip()
         contrasena = self.pass_entry.get()
 
         
@@ -88,21 +88,22 @@ class LoginWindow(Tk):
             conexion = self.conectar_db()
             cursor = conexion.cursor()
 
-            query = "SELECT contraseña FROM usuario WHERE nombre = %s"
-            cursor.execute(query, (usuario,))
+            query = "SELECT nombre, contraseña FROM usuario WHERE boleta = %s"
+            cursor.execute(query, (boleta,))
             resultado = cursor.fetchone()
 
             if resultado:
-                contrasena_db = resultado[0]
+                nombre_usuario = resultado[0]
+                contrasena_db = resultado[1]
 
 
                 if contrasena_hash == contrasena_db:
                     self.resultado_label.configure(text="Login exitoso", text_color="green")
-                    self.abrir_menu(usuario)
+                    self.abrir_menu(nombre_usuario)
                 else:
                     self.resultado_label.configure(text="Contraseña incorrecta", text_color="red")
             else:
-                self.resultado_label.configure(text="Usuario no existe", text_color="red")
+                self.resultado_label.configure(text="La boleta no existe", text_color="red")
 
             cursor.close()
             conexion.close()

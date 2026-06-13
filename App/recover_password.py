@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import pymysql as sql
 import json
+import hashlib
 from tkinter.messagebox import showinfo, showerror
 
 DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
@@ -47,20 +48,22 @@ class RecoverPasswordWindow(ctk.CTk):
 
     def recuperar(self, *args, **kwargs):
         usuario = self.entry_usuario.get().strip().lower()
+        boleta = self.entry_usuario.get().strip()
         pregunta = self.combo_pregunta.get()
         respuesta = self.entry_respuesta.get().strip().lower()
+        respuesta_hash = hashlib.sha256(respuesta.encode()).hexdigest()
         
-        if not usuario: return showerror("Error", "Ingresa un usuario válido")
+        if not boleta: return showerror("Error", "Ingresa una boleta válida")
         if pregunta == "Pregunta de seguridad": return showerror("Error", "Selecciona tu pregunta de recuperación")
         if not respuesta: return showerror("Error", "Ingresa una respuesta válida")
         try:
             conn = self.conectar_db()
             cur = conn.cursor()
-            cur.execute("SELECT * from usuario where nombre = %s", args=(usuario,))
-            response = list(cur.fetchall()[0])
-            if self.PREGUNTAS.index(pregunta)+1 == response[5] and response[4] == respuesta:
+            cur.execute("SELECT res_recu, idrecuperacion FROM usuario WHERE boleta = %s", args=(usuario,))
+            response = cur.fetchone()
+            if self.PREGUNTAS.index(pregunta)+1 == response[1] and response[0] == respuesta_hash:
                 showinfo("Éxito", "Hemos detectado tu cuenta y validado tu pregunta de recuperación")
-                self.actualizar_contraseña(usuario)
+                self.actualizar_contraseña(boleta)
             else: showerror("Error", "Los datos que has ingresado son incorrectos o el usuario no existe.")
         except IndexError as e:
             showerror("Error", "Los datos que has ingresado son incorrectos o el usuario no existe.")
@@ -75,7 +78,7 @@ class RecoverPasswordWindow(ctk.CTk):
         frame = ctk.CTkFrame(card, fg_color="transparent")
         frame.pack(padx=24, fill="x")
 
-        self.entry_usuario = ctk.CTkEntry(frame, placeholder_text="Usuario", placeholder_text_color=self.PH, fg_color=self.ENTRY, border_color=self.ENTRY, text_color=self.TXT, height=42, corner_radius=8, font=ctk.CTkFont(size=13))
+        self.entry_usuario = ctk.CTkEntry(frame, placeholder_text="Boleta", placeholder_text_color=self.PH, fg_color=self.ENTRY, border_color=self.ENTRY, text_color=self.TXT, height=42, corner_radius=8, font=ctk.CTkFont(size=13))
         self.entry_usuario.pack(fill="x", pady=(0,30))
         self.entry_usuario.bind('<Return>', self.recuperar)
 

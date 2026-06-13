@@ -1,114 +1,159 @@
-import customtkinter as ctk
-import pymysql as sql
 import hashlib
+import pymysql as sql
 import json
 
-# Configuración de apariencia
-# ctk.set_appearance_mode("dark")
-# ctk.set_default_color_theme("blue")
+from customtkinter import CTk as Tk
+from customtkinter import CTkFrame as Frame
+from customtkinter import CTkLabel as Label
+from customtkinter import CTkEntry as Entry
+from customtkinter import CTkFont as Font
+from customtkinter import CTkButton as Button
+from customtkinter import CTkComboBox as ComboBox
 
-class UpdatePassWindow(ctk.CTk):
-    def __init__(self, usuario, **kwargs):
-        super().__init__(**kwargs)
-        self.app = ctk.CTk()
-        self.app.title("Actualizar Contraseña")
-        self.app.geometry("480x380")
-        self.app.resizable(False, False)
-        self.usuario = usuario
+
+class RegisterWindow(Tk):
+    def __init__(self, fg_color = None, **kwargs):
+        super().__init__(fg_color, **kwargs)
+        self.geometry("400x710")
+        self.title("Login / Register")
     
-    def verify_password(self):
-        password1 = self.entry_password.get()
-        password2 = self.entry_confirm.get()
-
-        if not password1 or not password2: return self.label_error.configure(text="Porfavor completa ambos campos.", text_color="orange")
-        if len(password1) < 4: return self.label_error.configure(text="PoLa contraseña debe tener al menos 4 caracteres.", text_color="orange")
-        if password1 != password2: self.label_error.configure(text="Las contraseñas no coinciden.", text_color="orange")
-
-        password = hashlib.sha256(password1.encode()).hexdigest()
-
-        conn = self.conectar_db()
-        cur = conn.cursor()
-        
-        cur.execute("UPDATE usuario SET contraseña = %s WHERE nombre = %s", args=(password, self.usuario))
-        conn.commit()
-        conn.close()
-        
-        self.label_error.configure(text="Contraseña actualizada correctamente", text_color="green")
-
-        self.abrir_login()
-        
-    def abrir_login(self):
-        self.destroy()
-        from App.login import LoginWindow
-        LoginWindow().show()
 
     def conectar_db(self):
         DATABASE = json.loads(open('settings.json', 'r', encoding='utf-8').read())
-        
         return sql.connect(
             host=DATABASE["host"],
             user=DATABASE["user"],
             password=DATABASE["password"],
             database=DATABASE["database"]
         )
+        
+    def abrir_login(self):
+        self.destroy()  
+        from App.login import LoginWindow
+
+        LoginWindow().show()
+
+    def recibir_preguntas(self):
+        conn = self.conectar_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM preguntas_recuperacion")
+        response = cur.fetchall()
+
+        preguntas = [pregunta for _, pregunta in response]
+        conn.close()
+        return preguntas
+
+    def register(self):
+        usuario = self.user_entry.get().strip().lower()
+        contrasena = self.pass_entry.get().strip()
+        contrasena2 = self.pass2_entry.get().strip()
+        pregunta_recuperacion = self.rec_question.get().strip()
+        respuesta = self.rec_answer.get().strip().lower()
+        respuesta_hash = hashlib.sha256(respuesta.encode()).hexdigest()
+        id_boleta = self.boleta.get().strip()
+        
+        if not id_boleta: return self.resultado_label.configure(text = "Ingresa una boleta válida", text_color="orange")
+        
+        if pregunta_recuperacion == "Recuperacion": return self.resultado_label.configure(text="Pregunta de recuperación inválida",
+                                                                                    text_color="orange")
+        else: id_recuperacion = self.recibir_preguntas().index(pregunta_recuperacion)+1
+        
+        if not respuesta: return self.resultado_label.configure(text="Respuesta de recupración inválida",
+                                                        text_color="orange")
+        
+        if contrasena != contrasena2:
+            self.resultado_label.configure(text="Las contraseñas no coinciden", text_color="orange")
+            return
+
+        # Validaciones básicas
+        if not usuario or not contrasena:
+            self.resultado_label.configure(text="Completa todos los campos", text_color="orange")
+            return
+
+        if len(contrasena) < 4:
+            self.resultado_label.configure(text="Mínimo 4 caracteres", text_color="orange")
+            return
+
+        # Hash de contraseña
+        contrasena_hash = hashlib.sha256(contrasena.encode()).hexdigest()
+
+        conexion = None
+        cursor = None
+        try:
+            conexion = self.conectar_db()
+            cursor = conexion.cursor()
+
+            # Verificar si el usuario ya existe
+            cursor.execute("SELECT idusuario FROM usuario WHERE boleta = %s", (id_boleta,))
+            if cursor.fetchone():
+                self.resultado_label.configure(text="La boleta ya existe", text_color="red")
+                return
+            print(id_recuperacion)
+
+            # Insertar usuario 
+            query = "INSERT INTO usuario (nombre, boleta, contraseña, res_recu, preguntas_recuperacion_idrecuperacion, roles_idroles) VALUES ( %s, %s, %s, %s, %s, %s)"
+            cursor.execute(query, (usuario, id_boleta, contrasena_hash, respuesta_hash, id_recuperacion, "1"))
+            conexion.commit()
+
+            self.resultado_label.configure(text="Usuario registrado", text_color="green")
+            # Limpiar campos
+            self.user_entry.delete(0, "end")
+            self.pass_entry.delete(0, "end")
+
+            # Abrir login y cerrar registro
+            self.abrir_login()
+
+        except Exception as e:
+            self.resultado_label.configure(text="Error al registrar", text_color="red")
+            print(e)
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
 
     def show(self):
-        self.frame = ctk.CTkFrame(self.app, corner_radius=16)
-        self.frame.pack(expand=True, fill="both", padx=30, pady=30)
+        self.main_frame = Frame(self)
+        self.main_frame.pack(expand=True)
 
-        # Título
-        self.label_titulo = ctk.CTkLabel(
-            self.frame,
-            text="Actualizar Contraseña",
-            font=ctk.CTkFont(family="Segoe UI", size=20, weight="bold"),
+        self.login_label = Label(
+            self.main_frame,
+            text="Registro",
+            font=Font(family="Calibri", size=24, weight="bold")
         )
-        self.label_titulo.pack(pady=(28, 20))
+        self.login_label.pack(pady=(20, 30))
 
-        # Entry contraseña nueva
-        self.entry_password = ctk.CTkEntry(
-            self.frame,
-            placeholder_text="Nueva contraseña",
-            show="*",
-            width=260,
-            height=42,
-            corner_radius=10,
-            font=ctk.CTkFont(size=14),
-        )
-        self.entry_password.pack(pady=(0, 12))
+        self.user_entry = Entry(self.main_frame, placeholder_text="Usuario")
+        self.user_entry.pack(pady=10, padx=40)
 
-        # Entry confirmar contraseña
-        self.entry_confirm = ctk.CTkEntry(
-            self.frame,
-            placeholder_text="Confirmar contraseña",
-            show="*",
-            width=260,
-            height=42,
-            corner_radius=10,
-            font=ctk.CTkFont(size=14),
-        )
-        self.entry_confirm.pack(pady=(0, 12))
+        self.pass_entry = Entry(self.main_frame, placeholder_text="Contraseña", show="*")
+        self.pass_entry.pack(pady=10, padx=40)
 
-        # Label de error (oculto inicialmente)
-        self.label_error = ctk.CTkLabel(
-            self.frame,
-            text="",
-            font=ctk.CTkFont(size=13),
-            wraplength=240,
-        )
-        self.label_error.pack(pady=(0, 10))
+        # Confirmar contraseña
+        self.pass2_entry = Entry(self.main_frame, placeholder_text="Conf Contraseña", show="*")
+        self.pass2_entry.pack(pady=10, padx=40)
 
+        # Seleccionar pregunta de recuperación con ComboBox
+        self.rec_question = ComboBox(self.main_frame, values=self.recibir_preguntas())
+        self.rec_question.set("Recuperacion")
+        self.rec_question.pack(pady=10, padx=40)
 
+        # Ingresar respuesta (40 chars max) de recuperacion
+        self.rec_answer = Entry(self.main_frame, placeholder_text="Respuesta")
+        self.rec_answer.pack(pady=10, padx=40)
 
-        # Botón confirmar
-        self.boton_confirmar = ctk.CTkButton(
-            self.frame,
-            text="Confirmar",
-            width=260,
-            height=42,
-            corner_radius=10,
-            font=ctk.CTkFont(size=14, weight="bold"),
-            command=self.verify_password,
-        )
-        self.boton_confirmar.pack(pady=(4, 28))
+        # Ingresar la boleta del estudiante
+        self.boleta = Entry(self.main_frame, placeholder_text="Boleta")
+        self.boleta.pack(pady=10, padx=40)
 
-        self.app.mainloop()
+        self.login_button = Button(self.main_frame, text="Iniciar Sesión", command=self.abrir_login)
+        self.login_button.pack(pady=20)
+
+        self.register_button = Button(self.main_frame, text="Registrarse", command=self.register)
+        self.register_button.pack(pady=20)
+
+        self.resultado_label = Label(self.main_frame, text="")
+        self.resultado_label.pack()
+
+        self.mainloop()
