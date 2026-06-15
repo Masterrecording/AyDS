@@ -39,23 +39,25 @@ class VentanaBase(Ventana):
         Label(self, text='Datos iniciales (quiz_base)', font=Font(family='Calibri', size=16, weight='bold')).pack(pady=8)
 
         campos = [
-            ('grupo', 'Grupo'),
-            ('sit_acad', 'Situación académica'),
-            ('num_materias', 'Número de materias'),
-            ('semestre', 'Semestre'),
-            ('str_tolerancia', 'Tolerancia (texto)'),
-            ('perse_carga', 'Perseverancia/carga (num)'),
-            ('pers_anim_general', 'Percepción anímica (texto)'),
-            ('motivacion_acad', 'Motivación académica (texto)')
+            ('grupo', 'Grupo', 0),
+            ('sit_acad', 'Situación académica', 0),
+            ('semestre', 'Semestre', 10),
+            ('propenso_estres', 'Del 1 al 5 ¿Qué tan fácil te estresas?', 5)
         ]
         self.entries = {}
         frame = ScrollableFrame(self)
         frame.pack(expand=True, fill='both', padx=8, pady=8)
-        for key, label in campos:
-            Label(frame, text=label).pack(anchor='w', padx=6, pady=(6, 0))
-            e = Entry(frame)
-            e.pack(fill='x', padx=6, pady=(0, 6))
-            self.entries[key] = e
+        for key, label, number in campos:
+            if number == 0:
+                Label(frame, text=label).pack(anchor='w', padx=6, pady=(6, 0))
+                e = Entry(frame)
+                e.pack(fill='x', padx=6, pady=(0, 6))
+                self.entries[key] = e
+            else:
+                Label(frame, text=label).pack(anchor='w', padx=6, pady=(6, 0))
+                e = OptionMenu(frame, values=list(range(1, number + 1)))
+                e.pack(fill='x', padx=6, pady=(0, 6))
+                self.entries[key] = e
 
         Button(self, text='Guardar', command=self.guardar).pack(pady=6)
         self.status = Label(self, text='')
