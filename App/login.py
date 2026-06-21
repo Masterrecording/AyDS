@@ -64,7 +64,7 @@ class LoginWindow(Tk):
         self.app.geometry('800x750')
         self.app.title('AyDS')
         self.gestor = GestorVentanas(self.app, boleta=boleta)
-        self.gestor.show('base')
+        self.gestor.show('inicio')
         self.app.mainloop()
 
 
