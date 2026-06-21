@@ -26,8 +26,8 @@ class LoginWindow(Tk):
         )
         self.login_label.pack(pady=(20, 30))
 
-        self.user_entry = Entry(self.main_frame, placeholder_text="Usuario")
-        self.user_entry.pack(pady=10, padx=40)
+        self.boleta_entry = Entry(self.main_frame, placeholder_text="Boleta")
+        self.boleta_entry.pack(pady=10, padx=40)
 
         self.pass_entry = Entry(self.main_frame, placeholder_text="Contraseña", show="*")
         self.pass_entry.pack(pady=10, padx=40)
@@ -56,15 +56,16 @@ class LoginWindow(Tk):
         from App.register import RegisterWindow
         RegisterWindow().show()
 
-    def abrir_menu(self, usuario):
+    def abrir_menu(self, boleta):
         self.destroy()
         from App.mainmenu import GestorVentanas
 
-        app = Tk()
-        app.geometry('800x650')
-        app.title('AyDS - Encuestas (refactor)')
-        gestor = GestorVentanas(app, usuario=usuario)
-        app.mainloop()
+        self.app = Tk()
+        self.app.geometry('800x750')
+        self.app.title('AyDS')
+        self.gestor = GestorVentanas(self.app, boleta=boleta)
+        self.gestor.show('base')
+        self.app.mainloop()
 
 
     def conectar_db(self):
@@ -78,7 +79,7 @@ class LoginWindow(Tk):
         )
 
     def login(self):
-        usuario = self.user_entry.get().strip().lower()
+        boleta = self.boleta_entry.get().strip()
         contrasena = self.pass_entry.get()
 
         
@@ -88,8 +89,8 @@ class LoginWindow(Tk):
             conexion = self.conectar_db()
             cursor = conexion.cursor()
 
-            query = "SELECT contraseña FROM usuario WHERE nombre = %s"
-            cursor.execute(query, (usuario,))
+            query = "SELECT contrasena FROM usuario WHERE boleta = %s"
+            cursor.execute(query, (boleta,))
             resultado = cursor.fetchone()
 
             if resultado:
@@ -98,11 +99,11 @@ class LoginWindow(Tk):
 
                 if contrasena_hash == contrasena_db:
                     self.resultado_label.configure(text="Login exitoso", text_color="green")
-                    self.abrir_menu(usuario)
+                    self.abrir_menu(boleta)
                 else:
                     self.resultado_label.configure(text="Contraseña incorrecta", text_color="red")
             else:
-                self.resultado_label.configure(text="Usuario no existe", text_color="red")
+                self.resultado_label.configure(text="No existe un usuario con esa boleta", text_color="red")
 
             cursor.close()
             conexion.close()

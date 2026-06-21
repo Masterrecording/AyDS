@@ -8,28 +8,30 @@ import json
 # ctk.set_default_color_theme("blue")
 
 class UpdatePassWindow(ctk.CTk):
-    def __init__(self, usuario, **kwargs):
+    def __init__(self, boleta, **kwargs):
         super().__init__(**kwargs)
-        self.app = ctk.CTk()
-        self.app.title("Actualizar Contraseña")
-        self.app.geometry("480x380")
-        self.app.resizable(False, False)
-        self.usuario = usuario
+        self.title("Actualizar Contraseña")
+        self.geometry("480x380")
+        self.resizable(False, False)
+        self.boleta = boleta
     
     def verify_password(self):
         password1 = self.entry_password.get()
         password2 = self.entry_confirm.get()
 
-        if not password1 or not password2: return self.label_error.configure(text="Porfavor completa ambos campos.", text_color="orange")
-        if len(password1) < 4: return self.label_error.configure(text="PoLa contraseña debe tener al menos 4 caracteres.", text_color="orange")
-        if password1 != password2: self.label_error.configure(text="Las contraseñas no coinciden.", text_color="orange")
+        if not password1 or not password2:
+            return self.label_error.configure(text="Por favor completa ambos campos.", text_color="orange")
+        if len(password1) < 4:
+            return self.label_error.configure(text="La contraseña debe tener al menos 4 caracteres.", text_color="orange")
+        if password1 != password2:
+            return self.label_error.configure(text="Las contraseñas no coinciden.", text_color="orange")
 
         password = hashlib.sha256(password1.encode()).hexdigest()
 
         conn = self.conectar_db()
         cur = conn.cursor()
         
-        cur.execute("UPDATE usuario SET contraseña = %s WHERE nombre = %s", args=(password, self.usuario))
+        cur.execute("UPDATE usuario SET contrasena = %s WHERE boleta = %s", args=(password, self.boleta))
         conn.commit()
         conn.close()
         
@@ -53,7 +55,7 @@ class UpdatePassWindow(ctk.CTk):
         )
 
     def show(self):
-        self.frame = ctk.CTkFrame(self.app, corner_radius=16)
+        self.frame = ctk.CTkFrame(self, corner_radius=16)
         self.frame.pack(expand=True, fill="both", padx=30, pady=30)
 
         # Título
@@ -111,4 +113,4 @@ class UpdatePassWindow(ctk.CTk):
         )
         self.boton_confirmar.pack(pady=(4, 28))
 
-        self.app.mainloop()
+        self.mainloop()

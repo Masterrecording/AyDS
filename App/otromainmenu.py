@@ -18,10 +18,10 @@ def conectar_db():
     return sql.connect(host=cfg['host'], user=cfg['user'], password=cfg['password'], database=cfg['database'])
 
 class VistaPrincipalEstudiante(Frame):
-    def __init__(self, master, gestor, usuario_id=None, **kwargs):
+    def __init__(self, master, gestor, boleta=None, **kwargs):
         super().__init__(master, **kwargs)
         self.gestor = gestor
-        self.usuario_id = usuario_id
+        self.boleta = boleta
         self.build()
 
     def build(self):
@@ -41,24 +41,15 @@ class VistaPrincipalEstudiante(Frame):
             conn = conectar_db()
             cur = conn.cursor()
             
-            cur.execute('SELECT nombre FROM usuario WHERE idusuario = %s', (self.usuario_id,))
+            cur.execute('SELECT nombre FROM usuario WHERE boleta = %s', (self.boleta,))
             nombre_result = cur.fetchone()
             nombre = nombre_result[0] if nombre_result else "Usuario"
-            
-            cur.execute('''
-                SELECT c.nombre 
-                FROM datos_usuario_perm d
-                JOIN carreras c ON d.carreras_idcarreras = c.idcarreras
-                WHERE d.usuario_idusuario = %s
-            ''', (self.usuario_id,))
-            carrera_result = cur.fetchone()
-            carrera = carrera_result[0] if carrera_result else "No especificada"
-            
+
             cur.execute('''
                 SELECT semestre
                 FROM quiz_base
-                WHERE usuario_idusuario = %s
-            ''', (self.usuario_id,))
+                WHERE usuario_boleta = %s
+            ''', (self.boleta,))
             semestre_result = cur.fetchone()
             semestre = semestre_result[0] if semestre_result else "N/A"
             
@@ -66,7 +57,6 @@ class VistaPrincipalEstudiante(Frame):
             conn.close()
         except Exception as e:
             nombre = "Usuario"
-            carrera = "No especificada"
             semestre = "N/A"
             print(e)
 
@@ -74,7 +64,7 @@ class VistaPrincipalEstudiante(Frame):
         header_frame.pack(fill='x', pady=(0, 20))
 
         Label(header_frame, text=nombre, font=Font(family='Calibri', size=28, weight='bold')).pack(anchor='w')
-        Label(header_frame, text=f"{carrera} - Semestre {semestre}", font=Font(size=14), fg_color='gray').pack(anchor='w')
+        Label(header_frame, text=f"Boleta {self.boleta} - Semestre {semestre}", font=Font(size=14), fg_color='gray').pack(anchor='w')
 
     def _mostrar_grafica_estres(self, parent):
         estres_frame = Frame(parent)
@@ -104,23 +94,20 @@ class VistaPrincipalEstudiante(Frame):
             hoy = datetime.now().date()
             hace_7_dias = hoy - timedelta(days=7)
 
-            valores = []
-            
-            for tabla in ['act_examen', 'act_proyecto', 'act_tarea']:
-                try:
-                    cur.execute(
-                        f'SELECT COALESCE(AVG(genera_estres), 0) FROM {tabla} WHERE usuario_idusuario = %s AND DATE(fecha) BETWEEN %s AND %s',
-                        (self.usuario_id, hace_7_dias, hoy)
-                    )
-                except Exception as e:
-                    print(e)
-                val = cur.fetchone()[0]
-                valores.append(val if val else 0)
+            cur.execute(
+                '''
+                SELECT COALESCE(AVG(prioridad), 0)
+                FROM actividades
+                WHERE usuario_boleta = %s AND DATE(fecha_entrega) BETWEEN %s AND %s
+                ''',
+                (self.boleta, hace_7_dias, hoy)
+            )
+            valor = cur.fetchone()[0] or 0
 
             cur.close()
             conn.close()
 
-            promedio = (sum(valores) / len(valores) if valores else 0) / 5.0 * 100
+            promedio = valor / 5.0 * 100
             return min(promedio, 100)
         except Exception as e:
             print(e)
@@ -149,9 +136,9 @@ class VistaPrincipalEstudiante(Frame):
                 SELECT p.id_act, p.nombre, m.nombre, p.fecha_entrega, p.estado
                 FROM actividades AS p
                 JOIN materias m ON p.materias_idmaterias = m.idmaterias
-                WHERE p.usuario_idusuario = %s AND p.estado != %s
+                WHERE p.usuario_boleta = %s AND p.estado != %s
                 ORDER BY p.fecha_entrega ASC
-            ''', (self.usuario_id, 'completada'))
+            ''', (self.boleta, 'completada'))
             pendientes = cur.fetchall()
             
             cur.close()
@@ -169,6 +156,8 @@ class VistaPrincipalEstudiante(Frame):
 
     def _crear_tarjeta_pendiente(self, parent, pid, nombre, materia, fecha_entrega, estado):
         hoy = datetime.now().date()
+        if isinstance(fecha_entrega, datetime):
+            fecha_entrega = fecha_entrega.date()
         dias_restantes = (fecha_entrega - hoy).days
         
         color = self._obtener_color_pendiente(dias_restantes, estado)
@@ -233,11 +222,13 @@ class VistaPrincipalEstudiante(Frame):
         ventana.title("Crear Pendiente")
         
         from App.add_task import AddTaskView
-        view = AddTaskView(ventana, self.gestor, usuario_id=self.usuario_id, callback=self.build)
+        view = AddTaskView(ventana, self.gestor, boleta=self.boleta, callback=self.build)
         view.pack(expand=True, fill='both')
         ventana.mainloop()
+        
+
 
 if __name__ == "__main__":
     root = Tk()
-    VistaPrincipalEstudiante(root, None, usuario_id=1)
+    VistaPrincipalEstudiante(root, None, boleta='0')
     root.mainloop()

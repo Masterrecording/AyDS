@@ -9,7 +9,7 @@ from customtkinter import CTkEntry as Entry
 from customtkinter import CTkButton as Button
 from customtkinter import CTkFont as Font
 from customtkinter import CTkOptionMenu as OptionMenu
-
+from tkinter.messagebox import showerror
 
 def conectar_db():
     cfg = json.loads(open('settings.json', 'r', encoding='utf-8').read())
@@ -17,10 +17,10 @@ def conectar_db():
 
 
 class AddTaskView(Frame):
-    def __init__(self, master, gestor, usuario_id=None, callback=None, **kwargs):
+    def __init__(self, master, gestor, boleta=None, usuario_id=None, callback=None, **kwargs):
         super().__init__(master, **kwargs)
         self.gestor = gestor
-        self.usuario_id = usuario_id
+        self.boleta = boleta or usuario_id
         self.callback = callback
 
         Label(self, text='Crear Pendiente', font=Font(family='Calibri', size=16, weight='bold')).pack(pady=8)
@@ -37,7 +37,7 @@ class AddTaskView(Frame):
         self.materia_menu = OptionMenu(self, values=self._cargar_materias())
         self.materia_menu.pack(fill='x', padx=8, pady=(0, 6))
 
-        Label(self, text='Fecha de entrega (YYYY-MM-DD)').pack(anchor='w', padx=8)
+        Label(self, text='Fecha de entrega (DD-MM-YYYY)').pack(anchor='w', padx=8)
         self.fecha_entry = Entry(self)
         self.fecha_entry.pack(fill='x', padx=8, pady=(0, 6))
 
@@ -52,21 +52,37 @@ class AddTaskView(Frame):
         self.status.pack()
 
     def _cargar_materias(self):
+        self.materias_dict = {}
         try:
             conn = conectar_db()
             cur = conn.cursor()
-            cur.execute('SELECT idmaterias, nombre FROM materias where usuario_idusuario = %s', args=(self.usuario_id,))
+            cur.execute('SELECT idmaterias, nombre FROM materias WHERE usuario_boleta = %s and semestre = %s', args=(self.boleta, self.resolve_semestre() or None))
             materias = cur.fetchall()
             cur.close()
             conn.close()
             self.materias_dict = {nombre: mid for mid, nombre in materias}
-            return [nombre for _, nombre in materias]
+            return [nombre for _, nombre in materias] or ['Sin materias']
         except Exception as e:
             print(e)
             return ['Error al cargar']
+        
+    def resolve_semestre(self):
+        try:
+            boleta = self.boleta
+            con = conectar_db()
+            cur = con.cursor()
+            cur.execute("select semestre from quiz_base where usuario_boleta = %s", args=(str(boleta),))
+            semestre = cur.fetchone()[0]
+            con.commit()
+            con.close()
+
+            return semestre
+            
+        except Exception as e:
+            print(f"Ocurrió un error al obtener el semestre para un nuevo pendiente: {e}")
 
     def _guardar(self):
-        if not self.usuario_id:
+        if not self.boleta:
             self.status.configure(text='Usuario no definido.')
             return
 
@@ -75,15 +91,20 @@ class AddTaskView(Frame):
         materia_nombre = self.materia_menu.get().strip()
         fecha_str = self.fecha_entry.get().strip()
         prioridad_texto = self.prioridad_menu.get()
+        semestre = self.resolve_semestre()
+
+    
+        if not semestre: 
+            return showerror("Error", "Debes completar la encuesta base antes de poder añadir pendientes")
 
         if not nombre or not materia_nombre or not fecha_str:
             self.status.configure(text='Completa todos los campos requeridos.', text_color='orange')
             return
 
         try:
-            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            fecha = datetime.strptime(fecha_str, '%d-%m-%Y').date()
         except ValueError:
-            self.status.configure(text='Fecha inválida. Usa formato YYYY-MM-DD.', text_color='orange')
+            self.status.configure(text='Fecha inválida. Usa formato DD-MM-YYYY.', text_color='orange')
             return
 
         prioridad_map = {'Baja': 1, 'Media': 2, 'Alta': 3, 'Muy Alta': 4, 'Urgente': 5}
@@ -98,8 +119,8 @@ class AddTaskView(Frame):
             conn = conectar_db()
             cur = conn.cursor()
             cur.execute(
-                'INSERT INTO actividades (usuario_idusuario, materias_idmaterias, nombre, descripcion, fecha_entrega, prioridad) VALUES (%s, %s, %s, %s, %s, %s)',
-                (self.usuario_id, materia_id, nombre, descripcion or None, fecha, prioridad)
+                'INSERT INTO actividades (usuario_boleta, materias_idmaterias, nombre, descripcion, fecha_entrega, semestre, prioridad) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                (self.boleta, materia_id, nombre, descripcion or None, fecha, str(semestre), prioridad)
             )
             conn.commit()
             cur.close()
@@ -121,6 +142,6 @@ if __name__ == '__main__':
     app = Tk()
     app.geometry('400x500')
     app.title('Crear Pendiente')
-    view = AddTaskView(app, None, usuario_id=1)
+    view = AddTaskView(app, None, boleta='0')
     view.pack(expand=True, fill='both')
     app.mainloop()
